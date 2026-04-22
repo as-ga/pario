@@ -97,6 +97,8 @@ export default function DashboardPage() {
     );
   }
 
+  if (!subscription) router.push("/subscribe");
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* NAVBAR */}

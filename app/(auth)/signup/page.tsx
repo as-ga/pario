@@ -47,7 +47,8 @@ export default function SignupPage() {
     }
     console.log("User created in DB:", createdUser); // Debugging ke liye
 
-    router.push("/dashboard");
+    // router.push("/dashboard");
+    router.push("/subscribe");
   };
 
   return (
