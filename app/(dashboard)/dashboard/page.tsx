@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { useUserStore } from "@/store/useUserStore";
 import Link from "next/link";
 import {
   Trophy,
@@ -15,89 +13,14 @@ import {
   AlertCircle,
 } from "lucide-react";
 import LogoutButton from "@/components/shared/LogoutButton";
-import type { User, Score, Subscription, UserCharity } from "@/types";
-
-// Phir useState mein types lagao
+import LoadingSkeleton from "@/components/dashboard/loadingSkeleton";
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const supabase = createClient();
+  const { user, subscription, scores, charity, isLoading } = useUserStore();
 
-  const [user, setUser] = useState<User | null>(null);
-  const [scores, setScores] = useState<Score[]>([]);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [charity, setCharity] = useState<UserCharity | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      // User fetch karo
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/login");
-        return;
-      }
-
-      // User profile
-      const { data: profile } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      // Scores fetch karo
-      const { data: scoresData } = await supabase
-        .from("scores")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("score_date", { ascending: false })
-        .limit(5);
-
-      // Subscription fetch karo
-      const { data: subData } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      // Charity fetch karo
-      const { data: charityData } = await supabase
-        .from("user_charity")
-        .select("*, charities(*)")
-        .eq("user_id", user.id)
-        .single();
-
-      if (!isMounted) {
-        return;
-      }
-
-      setUser(profile);
-      setScores(scoresData || []);
-      setSubscription(subData);
-      setCharity(charityData);
-      setLoading(false);
-    };
-
-    void fetchData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [router, supabase]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+  if (isLoading) {
+    return <LoadingSkeleton />;
   }
-
-  if (!subscription) router.push("/subscribe");
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -182,7 +105,8 @@ export default function DashboardPage() {
               </div>
               <Link
                 href="/scores"
-                className="flex items-center gap-1 text-green-400 text-sm hover:underline"
+                className="flex items-center gap-1 text-green-400
+                           text-sm hover:underline"
               >
                 Add Score <ChevronRight size={16} />
               </Link>
@@ -194,7 +118,8 @@ export default function DashboardPage() {
                 <p className="text-zinc-500">No scores yet</p>
                 <Link
                   href="/scores"
-                  className="mt-4 inline-block bg-green-500 hover:bg-green-400 text-black font-bold px-6 py-2 rounded-full text-sm"
+                  className="mt-4 inline-block bg-green-500 hover:bg-green-400
+                             text-black font-bold px-6 py-2 rounded-full text-sm"
                 >
                   Add Your First Score
                 </Link>
@@ -218,12 +143,12 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 ))}
-
-                {/* Empty slots */}
                 {Array.from({ length: 5 - scores.length }).map((_, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between bg-zinc-800/40 border border-dashed border-zinc-700 rounded-xl px-4 py-3"
+                    className="flex items-center justify-between bg-zinc-800/40
+                               border border-dashed border-zinc-700
+                               rounded-xl px-4 py-3"
                   >
                     <span className="text-zinc-600 text-sm">Empty slot</span>
                     <span className="text-zinc-700 text-sm">—</span>
@@ -241,7 +166,6 @@ export default function DashboardPage() {
                 <h3 className="text-lg font-bold">Subscription</h3>
                 <Clock size={20} className="text-zinc-500" />
               </div>
-
               {subscription ? (
                 <div className="space-y-3">
                   <div className="flex justify-between">
@@ -252,13 +176,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-400">Status</span>
-                    <span
-                      className={`font-semibold capitalize ${
-                        subscription.status === "active"
-                          ? "text-green-400"
-                          : "text-red-400"
-                      }`}
-                    >
+                    <span className="text-green-400 font-semibold capitalize">
                       {subscription.status}
                     </span>
                   </div>
@@ -292,7 +210,6 @@ export default function DashboardPage() {
                 <h3 className="text-lg font-bold">My Charity</h3>
                 <Heart size={20} className="text-red-400" />
               </div>
-
               {charity ? (
                 <div className="space-y-3">
                   <div className="flex justify-between">
@@ -309,7 +226,8 @@ export default function DashboardPage() {
                   </div>
                   <Link
                     href="/charity"
-                    className="block text-center text-zinc-400 hover:text-white text-sm mt-2 transition-colors"
+                    className="block text-center text-zinc-400 hover:text-white
+                               text-sm mt-2 transition-colors"
                   >
                     Change charity →
                   </Link>
@@ -320,7 +238,8 @@ export default function DashboardPage() {
                   <p className="text-zinc-500 mb-4">No charity selected</p>
                   <Link
                     href="/charity"
-                    className="bg-red-500 hover:bg-red-400 text-white font-bold px-6 py-2 rounded-full text-sm"
+                    className="bg-red-500 hover:bg-red-400 text-white
+                               font-bold px-6 py-2 rounded-full text-sm"
                   >
                     Choose Charity
                   </Link>
@@ -331,11 +250,8 @@ export default function DashboardPage() {
         </div>
 
         {/* DRAW INFO */}
-        <div
-          className="mt-6 bg-gradient-to-r from-green-500/10 to-yellow-500/10
-                        border border-green-500/20 rounded-2xl p-6"
-        >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mt-6 bg-gradient-to-r from-green-500/10 to-yellow-500/10 border border-green-500/20 rounded-2xl p-6">
+          <div className="flex flex-col md:flex-row items-center  justify-between gap-4">
             <div>
               <h3 className="text-lg font-bold flex items-center gap-2">
                 <Trophy size={20} className="text-yellow-400" />
@@ -348,8 +264,7 @@ export default function DashboardPage() {
             </div>
             <Link
               href="/draws"
-              className="flex items-center gap-2 bg-green-500 hover:bg-green-400
-                         text-black font-bold px-6 py-3 rounded-full transition-all"
+              className="flex items-center gap-2 bg-green-500 hover:bg-green-400 text-black font-bold px-6 py-3 rounded-full transition-all"
             >
               View Draw Details <ChevronRight size={18} />
             </Link>
