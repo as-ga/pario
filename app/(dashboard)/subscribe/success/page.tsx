@@ -1,12 +1,13 @@
 "use client";
 
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import Link from "next/link";
 import { CheckCircle, Trophy, Heart, TrendingUp } from "lucide-react";
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = createClient();
@@ -63,7 +64,6 @@ export default function SuccessPage() {
                     justify-center px-6"
     >
       <div className="max-w-md w-full text-center">
-        {/* Success Icon */}
         <div
           className="w-20 h-20 bg-green-500/20 rounded-full flex items-center
                         justify-center mx-auto mb-6"
@@ -79,7 +79,6 @@ export default function SuccessPage() {
           gayi!
         </p>
 
-        {/* Next Steps */}
         <div
           className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800
                         text-left space-y-4 mb-8"
@@ -87,7 +86,6 @@ export default function SuccessPage() {
           <p className="text-zinc-400 text-sm font-bold mb-3">
             Ab kya karna hai:
           </p>
-
           {[
             {
               icon: <TrendingUp size={18} className="text-green-400" />,
@@ -127,5 +125,23 @@ export default function SuccessPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+// Suspense boundary wrap karo
+export default function SuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <div
+            className="w-10 h-10 border-2 border-green-400 border-t-transparent
+                        rounded-full animate-spin"
+          />
+        </div>
+      }
+    >
+      <SuccessContent />
+    </Suspense>
   );
 }
