@@ -15,6 +15,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import type { Draw, DrawResult, Score } from "@/types";
+import ProofSubmit from "@/components/dashboard/ProofSubmit";
 
 interface DrawWithResults extends Draw {
   draw_results: DrawResult[];
@@ -85,11 +86,11 @@ export default function DrawsPage() {
     return "🥉 3 Match Winner!";
   };
 
-  const getPrizeForMatch = (matched: number, prizePool: number) => {
-    if (matched === 5) return (prizePool * 0.4).toFixed(0);
-    if (matched === 4) return (prizePool * 0.35).toFixed(0);
-    return (prizePool * 0.25).toFixed(0);
-  };
+  // const getPrizeForMatch = (matched: number, prizePool: number) => {
+  //   if (matched === 5) return (prizePool * 0.4).toFixed(0);
+  //   if (matched === 4) return (prizePool * 0.35).toFixed(0);
+  //   return (prizePool * 0.25).toFixed(0);
+  // };
 
   // Check karo user ke scores draw numbers se match karte hain
   const getMatchedNumbers = (drawnNumbers: number[]) => {
@@ -100,10 +101,7 @@ export default function DrawsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div
-          className="w-8 h-8 border-2 border-green-400 border-t-transparent
-                        rounded-full animate-spin"
-        />
+        <div className="w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -180,42 +178,18 @@ export default function DrawsPage() {
             <div className="space-y-3">
               {myResults.map((result) => (
                 <div
-                  key={result.id}
-                  className={`p-5 rounded-2xl border ${getMatchColor(
+                  className={`p-4 rounded-xl border ${getMatchColor(
                     result.matched
                   )}`}
+                  key={result.id}
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-bold">
-                        {getMatchLabel(result.matched)}
-                      </p>
-                      <p className="text-sm opacity-70 mt-1">
-                        {new Date(result.created_at).toLocaleDateString(
-                          "en-IN",
-                          {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-black">
-                        ₹{result.prize_amount}
-                      </p>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          result.status === "paid"
-                            ? "bg-green-500/20 text-green-400"
-                            : "bg-yellow-500/20 text-yellow-400"
-                        }`}
-                      >
-                        {result.status === "paid" ? "✓ Paid" : "⏳ Pending"}
-                      </span>
-                    </div>
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="font-bold">{getMatchLabel(result.matched)}</p>
+                    <p className="text-xl font-black">₹{result.prize_amount}</p>
                   </div>
+
+                  {/* Proof Submit Button */}
+                  <ProofSubmit resultId={result.id} userId={userId} />
                 </div>
               ))}
             </div>
