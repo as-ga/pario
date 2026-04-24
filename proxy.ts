@@ -1,8 +1,24 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const protectedRoutes = [
+  "/dashboard",
+  "/chartity",
+  "/draws",
+  "/scores",
+  "/subscribe",
+  "/subscribe/success",
+  "/admin",
+  "/admin/charities",
+  "/admin/draws",
+  "/admin/users",
+  "/admin/winners",
+];
+const authRoutes = ["/login", "/signup"];
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
+  const { pathname } = request.nextUrl;
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,27 +45,36 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
+  if (!user) {
+    if (protectedRoutes.includes(pathname)) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+  } else {
+    if (authRoutes.includes(pathname)) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    if (pathname.startsWith("/subscribe")) {
+      const { data } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
 
-  if (!user && request.nextUrl.pathname.startsWith("/admin")) {
-    return NextResponse.redirect(new URL("/login", request.url));
+      if (data?.role === "admin") {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
+    }
   }
-
-  // Agar logged in hai toh login/signup pe mat jaao
-  if (
-    user &&
-    (request.nextUrl.pathname === "/login" ||
-      request.nextUrl.pathname === "/signup")
-  ) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/login", "/signup"],
+  matcher: [
+    "/dashboard/:path*",
+    "/admin/:path*",
+    "/login",
+    "/signup",
+    "/subscribe/:path*",
+    "/subscribe/success",
+  ],
 };
